@@ -33,6 +33,46 @@ BpodSystem.Data.Custom.EarlySout(iTrial) = any(strcmp('EarlyRout',statesThisTria
 BpodSystem.Data.Custom.Rewarded(iTrial) = any(strncmp('water_',statesThisTrial,6));
 BpodSystem.Data.Custom.RewardMagnitude(iTrial,1:2) = TaskParameters.GUI.rewardAmount;
 
+%% Photometry
+
+sampleRate=TaskParameters.GUI.NidaqSamplingRate;
+modAmp=TaskParameters.GUI.LED1_Amp;
+modFreq=TaskParameters.GUI.LED1_Freq;
+duration=TaskParameters.GUI.NidaqDuration;
+lowCutoff=15;
+decimateFactor = TaskParameters.GUI.DecimateFactor;
+isPad = 1;
+
+winSignal = [-3,5];
+dff = nan(1,diff(winSignal)*sampleRate/decimateFactor);
+winBaseline = [-3,-1];
+stateToZero = {'rewarded_Lin','rewarded_Rin','unrewarded_Lin','unrewarded_Rin'};
+
+rawData = BpodSystem.Data.NidaqData{iTrial};
+[ demodData, demodTime ] = nidemod( rawData(:,1),rawData(:,2),modFreq,modAmp,decimateFactor,sampleRate,lowCutoff,isPad );
+refTimeBaseline = BpodSystem.Data.RawEvents.Trial{iTrial}.States.Cin(1);
+refTimeSignal = [];
+for iState = 1:numel(stateToZero)
+    if any(strcmp(stateToZero{iState},BpodSystem.Data.RawData.OriginalStateNamesByNumber{iTrial}(BpodSystem.Data.RawData.OriginalStateData{iTrial})))
+        refTimeSignal=BpodSystem.Data.RawEvents.Trial{iTrial}.States.(stateToZero{iState})(1,1);
+    end
+end
+
+if ~isempty(refTimeSignal) && refTimeSignal < duration
+    dff_den = mean(demodData(demodTime > winBaseline(1)+refTimeBaseline & demodTime < winBaseline(2)+refTimeBaseline));
+    dff_num = demodData(demodTime > winSignal(1)+refTimeSignal & demodTime < winSignal(2)+refTimeSignal);
+    if length(dff_num) < size(dff,2)
+        dff_num(length(dff_num)+1:size(dff,2)) = NaN;
+    end
+    dff(iTrial,:) = 100*(dff_num-dff_den)/dff_den;
+end
+
+if isempty(BpodSystem.Data.Custom.DFF)
+    BpodSystem.Data.Custom.DFF = nan(iTrial,diff(winSignal)*sampleRate/decimateFactor);
+end
+BpodSystem.Data.Custom.DFF(iTrial,:) = dff;
+BpodSystem.Data.Custom.winSignal = winSignal;
+
 %% initialize next trial values
 BpodSystem.Data.Custom.ChoiceLeft(iTrial+1) = NaN;
 BpodSystem.Data.Custom.EarlyCout(iTrial+1) = false;
@@ -111,7 +151,7 @@ TaskParameters.GUI.StimDelay = max(TaskParameters.GUI.StimDelayMin,min(TaskParam
 %% Side ports
 switch TaskParameters.GUIMeta.FeedbackDelaySelection.String{TaskParameters.GUI.FeedbackDelaySelection}
     case 'Fix'
-        TaskParameters.GUI.StimDelay = TaskParameters.GUI.FeedbackDelayMax;
+        TaskParameters.GUI.FeedbackDelay = TaskParameters.GUI.FeedbackDelayMax;
     case 'AutoIncr'
         if sum(~isnan(BpodSystem.Data.Custom.FeedbackDelay)) >= 10
             TaskParameters.GUI.FeedbackDelay = prctile(BpodSystem.Data.Custom.FeedbackDelay,TaskParameters.GUI.MinCutoff);
@@ -123,9 +163,8 @@ switch TaskParameters.GUIMeta.FeedbackDelaySelection.String{TaskParameters.GUI.F
             TaskParameters.GUI.FeedbackDelayMax,TaskParameters.GUI.FeedbackDelayTau);
     case 'Uniform'
         TaskParameters.GUI.FeedbackDelay = TaskParameters.GUI.FeedbackDelayMin + (TaskParameters.GUI.FeedbackDelayMax-TaskParameters.GUI.FeedbackDelayMin)*rand(1);
-        
-TaskParameters.GUI.FeedbackDelay = max(TaskParameters.GUI.FeedbackDelayMin,min(TaskParameters.GUI.FeedbackDelay,TaskParameters.GUI.FeedbackDelayMax));
-
+        TaskParameters.GUI.FeedbackDelay = max(TaskParameters.GUI.FeedbackDelayMin,min(TaskParameters.GUI.FeedbackDelay,TaskParameters.GUI.FeedbackDelayMax));
+end
 %% send bpod status to server
 try
     BpodSystem.Data.Custom.Script = 'receivebpodstatus.php';

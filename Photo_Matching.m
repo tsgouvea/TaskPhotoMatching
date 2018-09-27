@@ -104,6 +104,8 @@ BpodSystem.Data.Custom.StimDelay(1) = NaN;
 BpodSystem.Data.Custom.FeedbackTime(1) = NaN;
 BpodSystem.Data.Custom.RewardMagnitude(1,1:2) = TaskParameters.GUI.rewardAmount;
 
+BpodSystem.Data.Custom.DFF = [];
+
 %server data
 BpodSystem.Data.Custom.Rig = getenv('computername');
 [~,BpodSystem.Data.Custom.Subject] = fileparts(fileparts(fileparts(fileparts(BpodSystem.DataPath))));
@@ -124,11 +126,17 @@ for i = fieldnames(temp)'
     BpodSystem.GUIHandles.(i{1}) = temp.(i{1});
 end
 clear temp
+
 BpodNotebook('init');
 
 %% NIDAQ Initialization amd Plots
 if TaskParameters.GUI.Photometry
     Nidaq_photometry('ini');
+    temp = PhotometryFigure();
+    for i = fieldnames(temp)'
+        BpodSystem.GUIHandles.(i{1}) = temp.(i{1});
+    end
+    clear temp
 end
 % if TaskParameters.GUI.Photometry
 %     FigNidaq1=Online_NidaqPlot('ini','470');
@@ -178,5 +186,6 @@ while RunSession
     updateCustomDataFields(iTrial)
     iTrial = iTrial + 1;
     BpodSystem.GUIHandles = SessionSummary(BpodSystem.Data, BpodSystem.GUIHandles, iTrial);
+    BpodSystem.GUIHandles = PhotometryFigure(BpodSystem.Data, BpodSystem.GUIHandles);
 end
 end

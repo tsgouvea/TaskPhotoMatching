@@ -17,15 +17,9 @@ if nargin < 2 % plot initialized (either beginning of session or post-hoc analys
     GUIHandles.Axes.OutcomePlot.MainHandle = axes('Position', [.06 .15 .91 .3]);
     GUIHandles.Axes.TrialRate.MainHandle = axes('Position', [[1 0]*[.06;.12] .6 .12 .3]);
     GUIHandles.Axes.StimDelay.MainHandle = axes('Position', [[2 1]*[.06;.12] .6 .12 .3]);
-    GUIHandles.Axes.FeedbackDelay.MainHandle = axes('Position', [[3 2]*[.06;.12] .6 .12 .3]);
-    GUIHandles.Axes.ChoiceKernel.MainHandle = axes('Position', [[4 3]*[.06;.12] .6 .12 .3]);
-    
-    if TaskParameters.GUI.Photometry
-        GUIHandles.Axes.Photo.MainHandle = axes('Position', [[5 4]*[.06;.12] .6 .12 .3]);
-        GUIHandles.Axes.Photo.MainHandle.XLim = [-2*TaskParameters.GUI.BaselineDur,TaskParameters.GUI.ITI];
-    else
-        GUIHandles.Axes.Wager.MainHandle = axes('Position', [[5 4]*[.06;.12] .6 .12 .3]);
-    end
+    GUIHandles.Axes.ChoiceKernel.MainHandle = axes('Position', [[3 2]*[.06;.12] .6 .12 .3]);
+    GUIHandles.Axes.PhotoNoR.MainHandle = axes('Position', [[4 3]*[.06;.12] .6 .12 .3]);
+    GUIHandles.Axes.Wager.MainHandle = axes('Position', [[5 4]*[.06;.12] .6 .12 .3]);
                 
     %% Outcome
     axes(GUIHandles.Axes.OutcomePlot.MainHandle)
@@ -68,32 +62,17 @@ if nargin < 2 % plot initialized (either beginning of session or post-hoc analys
     GUIHandles.Axes.ChoiceKernel.MainHandle.YLabel.String = 'GLM coefficient';
     GUIHandles.Axes.ChoiceKernel.MainHandle.Title.String = 'Choice kernel';
     
-    %% Time Wagering & Photometry
+    %% Time Wagering
     
-    if TaskParameters.GUI.Photometry
-        hold(GUIHandles.Axes.Photo.MainHandle,'on')
-        %colors from [http://paletton.com/#uid=3000u0kllllaFw0g0qFqFg0w0aF]
-        GUIHandles.Axes.Photo.PhotoData = line(GUIHandles.Axes.Photo.MainHandle,[1,5],[0,0],'Color',[13.3, 40, 40]/100,'Visible','on','linewidth',2);
-        
-        if TaskParameters.GUI.RedChannel
-            GUIHandles.Axes.Photo.Photo2Data = line(GUIHandles.Axes.Photo.MainHandle,[1,5],[0,0],'Color',[50.2, 8.2, 8.2]/100,'Visible','on','linewidth',2);
-        end
-        
-        GUIHandles.Axes.Photo.MainHandle.XLabel.String = 'time (s)';
-        GUIHandles.Axes.Photo.MainHandle.YLabel.String = 'dF/F';
-        GUIHandles.Axes.Photo.MainHandle.Title.String = 'Photometry';
-        
-    else
-        hold(GUIHandles.Axes.Wager.MainHandle,'on')
-        %colors from [http://paletton.com/#uid=3000u0kllllaFw0g0qFqFg0w0aF]
-        GUIHandles.Axes.Wager.ExploitScatter = line(GUIHandles.Axes.Wager.MainHandle,[1,5],[0,0],'marker','o','linestyle','none','MarkerEdgeColor',[40, 60, 60]/100,'Visible','on');
-        GUIHandles.Axes.Wager.ExploreScatter = line(GUIHandles.Axes.Wager.MainHandle,[1,5],[0,0],'marker','o','linestyle','none','MarkerEdgeColor',[83.1, 41.6, 41.6]/100,'Visible','on');
-        GUIHandles.Axes.Wager.ExploitLine = line(GUIHandles.Axes.Wager.MainHandle,[1,5],[0,0],'Color',[13.3, 40, 40]/100,'Visible','on','linewidth',2);
-        GUIHandles.Axes.Wager.ExploreLine = line(GUIHandles.Axes.Wager.MainHandle,[1,5],[0,0],'Color',[50.2, 8.2, 8.2]/100,'Visible','on','linewidth',2);
-        GUIHandles.Axes.Wager.MainHandle.XLabel.String = 'log(pL/pR)';
-        GUIHandles.Axes.Wager.MainHandle.YLabel.String = 'Waiting time (s)';
-        GUIHandles.Axes.Wager.MainHandle.Title.String = 'Vevaiometric?';
-    end
+    hold(GUIHandles.Axes.Wager.MainHandle,'on')
+    %colors from [http://paletton.com/#uid=3000u0kllllaFw0g0qFqFg0w0aF]
+    GUIHandles.Axes.Wager.ExploitScatter = line(GUIHandles.Axes.Wager.MainHandle,[1,5],[0,0],'marker','o','linestyle','none','MarkerEdgeColor',[40, 60, 60]/100,'Visible','on');
+    GUIHandles.Axes.Wager.ExploreScatter = line(GUIHandles.Axes.Wager.MainHandle,[1,5],[0,0],'marker','o','linestyle','none','MarkerEdgeColor',[83.1, 41.6, 41.6]/100,'Visible','on');
+    GUIHandles.Axes.Wager.ExploitLine = line(GUIHandles.Axes.Wager.MainHandle,[1,5],[0,0],'Color',[13.3, 40, 40]/100,'Visible','on','linewidth',2);
+    GUIHandles.Axes.Wager.ExploreLine = line(GUIHandles.Axes.Wager.MainHandle,[1,5],[0,0],'Color',[50.2, 8.2, 8.2]/100,'Visible','on','linewidth',2);
+    GUIHandles.Axes.Wager.MainHandle.XLabel.String = 'log(pL/pR)';
+    GUIHandles.Axes.Wager.MainHandle.YLabel.String = 'Waiting time (s)';
+    GUIHandles.Axes.Wager.MainHandle.Title.String = 'Vevaiometric?';
 else
 %     global TaskParameters
 end
