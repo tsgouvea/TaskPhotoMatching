@@ -1,8 +1,8 @@
 function GUIHandles = SessionSummary(Data, GUIHandles, iTrial, nTrialsToShow)
 
 %global nTrialsToShow %this is for convenience
-% global BpodSystem
-global TaskParameters
+%global BpodSystem
+%global TaskParameters
 if nargin < 4 %custom number of trials to display
     nTrialsToShow = 90; %default
 end
@@ -17,10 +17,10 @@ if nargin < 2 % plot initialized (either beginning of session or post-hoc analys
     GUIHandles.Axes.OutcomePlot.MainHandle = axes('Position', [.06 .15 .91 .3]);
     GUIHandles.Axes.TrialRate.MainHandle = axes('Position', [[1 0]*[.06;.12] .6 .12 .3]);
     GUIHandles.Axes.StimDelay.MainHandle = axes('Position', [[2 1]*[.06;.12] .6 .12 .3]);
-    GUIHandles.Axes.ChoiceKernel.MainHandle = axes('Position', [[3 2]*[.06;.12] .6 .12 .3]);
-    GUIHandles.Axes.PhotoNoR.MainHandle = axes('Position', [[4 3]*[.06;.12] .6 .12 .3]);
+    GUIHandles.Axes.FeedbackDelay.MainHandle = axes('Position', [[3 2]*[.06;.12] .6 .12 .3]);
+    GUIHandles.Axes.ChoiceKernel.MainHandle = axes('Position', [[4 3]*[.06;.12] .6 .12 .3]);
     GUIHandles.Axes.Wager.MainHandle = axes('Position', [[5 4]*[.06;.12] .6 .12 .3]);
-                
+    
     %% Outcome
     axes(GUIHandles.Axes.OutcomePlot.MainHandle)
     GUIHandles.Axes.OutcomePlot.Bait = line(-1,1, 'LineStyle','none','Marker','o','MarkerEdge','g','MarkerFace','none', 'MarkerSize',8);
@@ -61,9 +61,7 @@ if nargin < 2 % plot initialized (either beginning of session or post-hoc analys
     GUIHandles.Axes.ChoiceKernel.MainHandle.XLabel.String = 'Trials back';
     GUIHandles.Axes.ChoiceKernel.MainHandle.YLabel.String = 'GLM coefficient';
     GUIHandles.Axes.ChoiceKernel.MainHandle.Title.String = 'Choice kernel';
-    
     %% Time Wagering
-    
     hold(GUIHandles.Axes.Wager.MainHandle,'on')
     %colors from [http://paletton.com/#uid=3000u0kllllaFw0g0qFqFg0w0aF]
     GUIHandles.Axes.Wager.ExploitScatter = line(GUIHandles.Axes.Wager.MainHandle,[1,5],[0,0],'marker','o','linestyle','none','MarkerEdgeColor',[40, 60, 60]/100,'Visible','on');
@@ -74,7 +72,7 @@ if nargin < 2 % plot initialized (either beginning of session or post-hoc analys
     GUIHandles.Axes.Wager.MainHandle.YLabel.String = 'Waiting time (s)';
     GUIHandles.Axes.Wager.MainHandle.Title.String = 'Vevaiometric?';
 else
-%     global TaskParameters
+    global TaskParameters
 end
 
 if nargin > 0
@@ -170,12 +168,12 @@ if nargin > 0
             min(Data.Custom.FeedbackDelay)*1000:max(Data.Custom.FeedbackDelay)*1000,...
             (GUIHandles.Axes.FeedbackDelay.Hist.BinWidth * iTrial) * exppdf(min(Data.Custom.FeedbackDelay)*1000:max(Data.Custom.FeedbackDelay)*1000,TaskParameters.GUI.FeedbackDelayTau*1000),'c');
     else
-        GUIHandles.Axes.FeedbackDelay.Hist = histogram(GUIHandles.Axes.FeedbackDelay.MainHandle,Data.Custom.FeedbackDelay*1000);
-        %GUIHandles.Axes.FeedbackDelay.Hist.BinWidth = 50;
+        GUIHandles.Axes.FeedbackDelay.Hist = histogram(GUIHandles.Axes.FeedbackDelay.MainHandle,Data.Custom.FeedbackDelay(~Data.Custom.EarlySout)*1000);
+        GUIHandles.Axes.FeedbackDelay.Hist.BinWidth = 50;
         GUIHandles.Axes.FeedbackDelay.Hist.EdgeColor = 'none';
         GUIHandles.Axes.FeedbackDelay.HistEarly = histogram(GUIHandles.Axes.FeedbackDelay.MainHandle,...
             Data.Custom.FeedbackDelay(Data.Custom.EarlySout)*1000);
-        %GUIHandles.Axes.FeedbackDelay.HistEarly.BinWidth = 50;
+        GUIHandles.Axes.FeedbackDelay.HistEarly.BinWidth = 50;
         GUIHandles.Axes.FeedbackDelay.HistEarly.EdgeColor = 'none';
         GUIHandles.Axes.FeedbackDelay.CutOff = plot(GUIHandles.Axes.FeedbackDelay.MainHandle,TaskParameters.GUI.FeedbackDelay*1000,0,'^k');
     end
@@ -194,42 +192,20 @@ if nargin > 0
             
             
             %% Time Wagering
-            if ~TaskParameters.GUI.Photometry
-                hold(GUIHandles.Axes.Wager.MainHandle,'on')
-                GUIHandles.Axes.Wager.ExploreScatter.Visible = 'on';
-                GUIHandles.Axes.Wager.ExploreLine.Visible = 'on';
-                ndxBaited = (Data.Custom.Baited.Left & Data.Custom.ChoiceLeft==1) | (Data.Custom.Baited.Right & Data.Custom.ChoiceLeft==0);
-                ndxBaited = ndxBaited(:);
-                ndxValid = Data.Custom.EarlyCout==0 & ~isnan(Data.Custom.ChoiceLeft); ndxValid = ndxValid(:);
-                ndxExploit = Data.Custom.ChoiceLeft(:) == (logodds>0);
-                GUIHandles.Axes.Wager.ExploreScatter.XData = logodds(ndxValid & ~ndxBaited & ~ndxExploit);
-                GUIHandles.Axes.Wager.ExploreScatter.YData = Data.Custom.FeedbackDelay(ndxValid & ~ndxBaited & ~ndxExploit);
-                GUIHandles.Axes.Wager.ExploitScatter.XData = logodds(ndxValid & ~ndxBaited & ndxExploit);
-                GUIHandles.Axes.Wager.ExploitScatter.YData = Data.Custom.FeedbackDelay(ndxValid & ~ndxBaited & ndxExploit);
-                [GUIHandles.Axes.Wager.ExploreLine.XData, GUIHandles.Axes.Wager.ExploreLine.YData] = binvevaio(GUIHandles.Axes.Wager.ExploreScatter.XData,GUIHandles.Axes.Wager.ExploreScatter.YData);
-                [GUIHandles.Axes.Wager.ExploitLine.XData, GUIHandles.Axes.Wager.ExploitLine.YData] = binvevaio(GUIHandles.Axes.Wager.ExploitScatter.XData,GUIHandles.Axes.Wager.ExploitScatter.YData);
-                GUIHandles.Axes.Wager.MainHandle.XLim = 1.1*[min(GUIHandles.Axes.Wager.ExploitScatter.XData) max(GUIHandles.Axes.Wager.ExploitScatter.XData)];
-            end
-        end
-    end
-    if TaskParameters.GUI.Photometry
-        PhotoData = Data.NidaqData{iTrial-1};
-        hold(GUIHandles.Axes.Photo.MainHandle,'on')
-        %colors from [http://paletton.com/#uid=3000u0kllllaFw0g0qFqFg0w0aF]
-%         rawData,refData,modFreq,modAmp,StateToZero
-        [GCaMP,GCaMPRaw]=Online_NidaqDemod(PhotoData(:,1),PhotoData(:,2),TaskParameters.GUI.LED1_Freq,TaskParameters.GUI.LED1_Amp,{'rewarded_Lin','rewarded_Rin','unrewarded_Lin','unrewarded_Rin'});
-        
-        if TaskParameters.GUI.RedChannel
-            GUIHandles.Axes.Photo.PhotoData = line(GUIHandles.Axes.Photo.MainHandle,GCaMP(:,1),GCaMP(:,3),'Color',[13.3, 40, 40]/100,'Visible','on','linewidth',1);
-            Photo2Data = Data.Nidaq2Data{iTrial-1};
-            [TdTom,TdTomRaw]=Online_NidaqDemod(Photo2Data(:,1),Photo2Data(:,2),TaskParameters.GUI.LED2_Freq,TaskParameters.GUI.LED2_Amp,'wait_Cin',iTrial);
-            GUIHandles.Axes.Photo.Photo2Data = line(GUIHandles.Axes.Photo.MainHandle,TdTom(:,1),TdTom(:,3),'Color',[50.2, 8.2, 8.2]/100,'Visible','on','linewidth',1);
-        else
-            if Data.Custom.Rewarded(end-1)
-                GUIHandles.Axes.Photo.PhotoData = line(GUIHandles.Axes.Photo.MainHandle,GCaMP(:,1),GCaMP(:,3),'Color',[13.3, 40, 40]/100,'Visible','on','linewidth',1);
-            else
-                GUIHandles.Axes.Photo.PhotoData = line(GUIHandles.Axes.Photo.MainHandle,GCaMP(:,1),GCaMP(:,3),'Color',[50.2, 8.2, 8.2]/100,'Visible','on','linewidth',1);
-            end
+            hold(GUIHandles.Axes.Wager.MainHandle,'on')
+            GUIHandles.Axes.Wager.ExploreScatter.Visible = 'on';
+            GUIHandles.Axes.Wager.ExploreLine.Visible = 'on';
+            ndxBaited = (Data.Custom.Baited.Left & Data.Custom.ChoiceLeft==1) | (Data.Custom.Baited.Right & Data.Custom.ChoiceLeft==0);
+            ndxBaited = ndxBaited(:);
+            ndxValid = Data.Custom.EarlyCout==0 & ~isnan(Data.Custom.ChoiceLeft); ndxValid = ndxValid(:);
+            ndxExploit = Data.Custom.ChoiceLeft(:) == (logodds>0);
+            GUIHandles.Axes.Wager.ExploreScatter.XData = logodds(ndxValid & ~ndxBaited & ~ndxExploit);
+            GUIHandles.Axes.Wager.ExploreScatter.YData = Data.Custom.FeedbackDelay(ndxValid & ~ndxBaited & ~ndxExploit);
+            GUIHandles.Axes.Wager.ExploitScatter.XData = logodds(ndxValid & ~ndxBaited & ndxExploit);
+            GUIHandles.Axes.Wager.ExploitScatter.YData = Data.Custom.FeedbackDelay(ndxValid & ~ndxBaited & ndxExploit);
+            [GUIHandles.Axes.Wager.ExploreLine.XData, GUIHandles.Axes.Wager.ExploreLine.YData] = binvevaio(GUIHandles.Axes.Wager.ExploreScatter.XData,GUIHandles.Axes.Wager.ExploreScatter.YData);
+            [GUIHandles.Axes.Wager.ExploitLine.XData, GUIHandles.Axes.Wager.ExploitLine.YData] = binvevaio(GUIHandles.Axes.Wager.ExploitScatter.XData,GUIHandles.Axes.Wager.ExploitScatter.YData);
+            GUIHandles.Axes.Wager.MainHandle.XLim = 1.1*[min(GUIHandles.Axes.Wager.ExploitScatter.XData) max(GUIHandles.Axes.Wager.ExploitScatter.XData)];
         end
     end
 end
