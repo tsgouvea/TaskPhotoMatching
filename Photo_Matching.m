@@ -133,8 +133,11 @@ BpodNotebook('init');
 if TaskParameters.GUI.Photometry
     Nidaq_photometry('ini');
     temp = PhotometryFigure();
-    for i = fieldnames(temp)'
-        BpodSystem.GUIHandles.(i{1}) = temp.(i{1});
+    for i = fieldnames(temp.Figs)'
+        BpodSystem.GUIHandles.Figs.(i{1}) = temp.Figs.(i{1});
+    end
+    for i = fieldnames(temp.Axes)'
+        BpodSystem.GUIHandles.Axes.(i{1}) = temp.Axes.(i{1});
     end
     clear temp
 end

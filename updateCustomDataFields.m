@@ -64,7 +64,7 @@ if ~isempty(refTimeSignal) && refTimeSignal < duration
     if length(dff_num) < size(dff,2)
         dff_num(length(dff_num)+1:size(dff,2)) = NaN;
     end
-    dff(iTrial,:) = 100*(dff_num-dff_den)/dff_den;
+    dff(1,:) = 100*(dff_num-dff_den)/dff_den;
 end
 
 if isempty(BpodSystem.Data.Custom.DFF)
