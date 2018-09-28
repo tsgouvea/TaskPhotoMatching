@@ -18,6 +18,7 @@ end
 
 if nargin > 0
     clims = [min(Data.Custom.DFF(:)), max(Data.Custom.DFF(:))];
+    if any(isnan(clims)), clims=[0,1]; end
     winSignal = Data.Custom.winSignal;
     isValid = ~isnan(Data.Custom.ChoiceLeft(:));
     isRwd = Data.Custom.Rewarded(:);
