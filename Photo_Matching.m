@@ -172,6 +172,8 @@ while RunSession
             BpodSystem.Data.NidaqData{iTrial}=PhotoData;
             if TaskParameters.GUI.RedChannel
                 BpodSystem.Data.Nidaq2Data{iTrial}=Photo2Data;
+            else
+                BpodSystem.Data.Nidaq2Data{iTrial}=[];
             end
         end
     end

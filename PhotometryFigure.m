@@ -9,11 +9,13 @@ if nargin < 2 % plot initialized (either beginning of session or post-hoc analys
     end
     
     GUIHandles = struct();
-    GUIHandles.Figs.PhotoFig = figure('Position', [200, 200, 400, 400],'name','Photometry','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
-    GUIHandles.Axes.RasterRwd.MainHandle = subplot(2,2,1);
-    GUIHandles.Axes.AvgRwd.MainHandle = subplot(2,2,3);
-    GUIHandles.Axes.RasterNoRwd.MainHandle = subplot(2,2,2);
-    GUIHandles.Axes.AvgNoRwd.MainHandle = subplot(2,2,4);
+    GUIHandles.Figs.PhotoFig = figure('Position', [200, 200, 800, 800],'name','Photometry','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+    GUIHandles.Axes.RasterRwd.MainHandle = subplot(3,2,1);
+    GUIHandles.Axes.AvgRwd.MainHandle = subplot(3,2,3);
+    GUIHandles.Axes.RasterNoRwd.MainHandle = subplot(3,2,2);
+    GUIHandles.Axes.AvgNoRwd.MainHandle = subplot(3,2,4);
+    GUIHandles.Axes.LastDemod.MainHandle = subplot(3,2,5); hold on  
+    GUIHandles.Axes.LastRaw.MainHandle = subplot(3,2,6);  hold on  
 end
 
 if nargin > 0
@@ -33,6 +35,24 @@ if nargin > 0
     xaxis = linspace(winSignal(1),winSignal(2),size(Data.Custom.DFF,2));
     plot(GUIHandles.Axes.AvgRwd.MainHandle,xaxis,nanmean(dff_rwd,1))
     plot(GUIHandles.Axes.AvgNoRwd.MainHandle,xaxis,nanmean(dff_norwd,1))
+    rawData = Data.NidaqData{end};
+    rawData2 = Data.Nidaq2Data{end};
+    
+    cla(GUIHandles.Axes.LastDemod.MainHandle)
+    cla(GUIHandles.Axes.LastRaw.MainHandle)
+    if ~isempty(rawData)
+        [ demodData, demodTime ] = nidemod( rawData(:,1),rawData(:,2),TaskParameters.GUI.LED1_Freq,...
+            TaskParameters.GUI.LED1_Amp,TaskParameters.GUI.DecimateFactor,TaskParameters.GUI.NidaqSamplingRate,15,1 );
+        plot(GUIHandles.Axes.LastDemod.MainHandle,demodTime,demodData)
+        plot(GUIHandles.Axes.LastRaw.MainHandle,rawData(1:400,1))
+    end
+    
+    if ~isempty(rawData2)
+        [ demodData2, demodTime2 ] = nidemod( rawData2(:,1),rawData2(:,2),TaskParameters.GUI.LED2_Freq,...
+            TaskParameters.GUI.LED2_Amp,TaskParameters.GUI.DecimateFactor,TaskParameters.GUI.NidaqSamplingRate,15,1 );
+        plot(GUIHandles.Axes.LastDemod.MainHandle,demodTime2,demodData2,'r')
+        plot(GUIHandles.Axes.LastRaw.MainHandle,rawData2(1:400,1),'r')
+    end
     
     set(GUIHandles.Axes.AvgNoRwd.MainHandle,'TickDir', 'out');
     GUIHandles.Axes.AvgNoRwd.MainHandle.XLabel.String='time from reward (s)';     
